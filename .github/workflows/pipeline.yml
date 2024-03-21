@@ -3,9 +3,9 @@ name: Build, Test and Deploy
 on:
     push:
       branches:
-        - master
+        - main
     pull_request:
-      branches: [master]
+      branches: [main]
       types: [opened, synchronize]
   
 
@@ -19,26 +19,29 @@ jobs:
           node-version: '16'
           
       - name: Install dependencies 
-        run: npm install  
+        run: npm install
+
+      - name: Check style
+        run: npm run lint
+
       - name: Test
         run: npm run test
         env:
             TEST_MONGODB_URI: ${{secrets.TEST_MONGODB_URI}}
             SECRET: ${{secrets.SECRET}}
 
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
       - name: Build UI
         run: npm run build:ui
 
+      - name: Setup Flyctl
+        if: ${{ !contains(join(github.event.commits.*.message), '#skip') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
       - name: Deploy
-        if: ${{ !contains(join(github.event.commits.*.message), '#skip') && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        run: flyctl deploy --remote-only -a own-cicd
+        if: ${{ !contains(join(github.event.commits.*.message), '#skip') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: flyctl deploy -a blogs-cicd
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-
 
   tag_release:
     needs: test_build_deploy_job
@@ -46,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Bump version and push tag
-        if: ${{ !contains(join(github.event.commits.*.message), '#skip') && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ !contains(join(github.event.commits.*.message), '#skip') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: anothrNick/github-tag-action@1.67.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

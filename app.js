@@ -28,13 +28,17 @@ app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 app.use(express.static('dist'))
 
+app.get('/health', (_req, res) => {
+    res.send('ok')
+})
+
 if (process.env.NODE_ENV === 'test') {
     const testingRouter = require('./controllers/testing')
     app.use('/api/testing', testingRouter)
-  }
+}
 
 app.use((err, req, res, next) => {
-    logger.error(err, req, res, next);
-});
+    logger.error(err, req, res, next)
+})
 
 module.exports = app
