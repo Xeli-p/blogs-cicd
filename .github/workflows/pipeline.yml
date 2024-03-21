@@ -43,6 +43,28 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+      - name: Notify discord about success
+        if: ${{ success() && github.event_name == 'push' }}
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: info
+          username: GitHub
+          text: New build succesfully deployed
+          description: to https://blogs-cicd.fly.dev/ by ${{ github.actor }}
+          footer: 'Severity: Informational'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+        
+      - name: Notify discord about failure
+        if: ${{ failure() && github.event_name == 'push' }}
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: error
+          username: GitHub
+          text: Build failed
+          description: commit ${{ github.event.commits[0].url }} by ${{ github.event.commits[0].author.username }} broke the build :(
+          footer: 'Severity: Error'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+
   tag_release:
     needs: test_build_deploy_job
     runs-on: ubuntu-20.04
