@@ -44,7 +44,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Notify discord about success
-        if: ${{ success() }}
+        if: ${{ success() && github.event_name == 'push' }}
         uses: rjstone/discord-webhook-notify@v1
         with:
           severity: info
@@ -55,7 +55,7 @@ jobs:
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
         
       - name: Notify discord about failure
-        if: ${{ failure() }}
+        if: ${{ failure() && github.event_name == 'push' }}
         uses: rjstone/discord-webhook-notify@v1
         with:
           severity: error
